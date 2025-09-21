@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Forecast Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6fa;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .controls-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+        }
+
+        select, input[type="number"], input[type="range"] {
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider-value {
+            background: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .scenario-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .scenario-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        .scenario-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .scenario-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .scenario-table select, 
+        .scenario-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .generate-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 2rem auto;
+            min-width: 200px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .generate-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            height: 500px;
+            margin: 1rem 0;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        .results-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sales Forecast Dashboard</h1>
+            <p>Generate accurate sales forecasts for your retail products</p>
+        </div>
+
+        <div class="controls-section">
+            <h2 class="section-title">Forecast Controls</h2>
+            
+            <div class="control-group">
+                <div class="form-group">
+                    <label for="product-select">Select Product:</label>
+                    <select id="product-select">
+                        <option value="P001">Product P001 - Amul Milk 500ml</option>
+                        <option value="P002">Product P002 - Britannia Bread</option>
+                        <option value="P003">Product P003 - Imported Cheese</option>
+                        <option value="P004">Product P004 - Organic Avocados</option>
+                        <option value="P006">Product P006 - Haldiram Sweets</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="weeks-slider">Forecast Period (Weeks):</label>
+                    <div class="slider-container">
+                        <input type="range" id="weeks-slider" min="1" max="25" value="4" oninput="updateSliderValue()">
+                        <span class="slider-value" id="slider-value">4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario-section">
+            <h2 class="section-title">Scenario Planner</h2>
+            <p>Configure your business scenarios for each week of the forecast period:</p>
+            
+            <div style="overflow-x: auto;">
+                <table class="scenario-table" id="scenario-table">
+                    <thead>
+                        <tr>
+                            <th>Week</th>
+                            <th>Promotion Name</th>
+                            <th>Promotion Type</th>
+                            <th>Discount Value (%)</th>
+                            <th>Promotion Scope</th>
+                            <th>Competitor Promotion</th>
+                            <th>Local Event</th>
+                            <th>Weather Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scenario-tbody">
+                        <!-- Rows will be generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button class="generate-btn" id="generate-btn" onclick="generateForecast()">
+            Generate Forecast
+        </button>
+
+        <div class="results-section" id="results-section" style="display: none;">
+            <h2 class="section-title">Forecast Results</h2>
+            
+            <div id="forecast-chart" class="chart-container"></div>
+            
+            <table class="results-table" id="results-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Forecasted Sales</th>
+                        <th>Confidence Level</th>
+                    </tr>
+                </thead>
+                <tbody id="results-tbody">
+                    <!-- Results will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function updateSliderValue() {
+            const slider = document.getElementById('weeks-slider');
+            const value = document.getElementById('slider-value');
+            value.textContent = slider.value;
+            generateScenarioTable();
+        }
+
+        function generateScenarioTable() {
+            const weeks = parseInt(document.getElementById('weeks-slider').value);
+            const tbody = document.getElementById('scenario-tbody');
+            
+            tbody.innerHTML = '';
+            
+            for (let i = 1; i <= weeks; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>Week ${i}</strong></td>
+                    <td>
+                        <select class="promotion-name">
+                            <option value="none">None</option>
+                            <option value="Diwali Dhamaka">Diwali Dhamaka</option>
+                            <option value="Monsoon Sale">Monsoon Sale</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="promotion-type">
+                            <option value="none">None</option>
+                            <option value="Percentage Discount">Percentage Discount</option>
+                            <option value="Flat off">Flat off</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="discount-value" min="0" max="100" value="0" placeholder="0">
+                    </td>
+                    <td>
+                        <select class="promotion-scope">
+                            <option value="none">None</option>
+                            <option value="Store-wide">Store-wide</option>
+                            <option value="Category">Category</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="competitor-promotion">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="local-event">
+                            <option value="None">None</option>
+                            <option value="Cricket Match Final">Cricket Match Final</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="weather-condition">
+                            <option value="Sunny">Sunny</option>
+                            <option value="Rainy">Rainy</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        async function generateForecast() {
+    const generateBtn = document.getElementById('generate-btn');
+    const resultsSection = document.getElementById('results-section');
+    const chartDiv = document.getElementById('forecast-chart');
+    
+    // Disable button and show loading
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    
+    try {
+        // Gather input data
+        const productId = document.getElementById('product-select').value;
+        const weeks = parseInt(document.getElementById('weeks-slider').value);
+        
+        // Collect scenario data
+        const scenarios = [];
+        const rows = document.querySelectorAll('#scenario-tbody tr');
+        
+        rows.forEach(row => {
+            const scenario = {
+                promotion_name: row.querySelector('.promotion-name').value,
+                promotion_type: row.querySelector('.promotion-type').value,
+                discount_value: parseFloat(row.querySelector('.discount-value').value) || 0,
+                promotion_scope: row.querySelector('.promotion-scope').value,
+                competitor_promotion_active: parseInt(row.querySelector('.competitor-promotion').value),
+                local_event: row.querySelector('.local-event').value,
+                weather_condition: row.querySelector('.weather-condition').value
+            };
+            scenarios.push(scenario);
+        });
+        
+        // Prepare API request
+        const requestData = {
+            product_id: productId,
+            weeks_to_forecast: weeks,
+            scenarios: scenarios
+        };
+        
+        console.log('Request data:', requestData); // DEBUG
+        
+        // Make API call
+        const response = await fetch('/api/forecast/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken() // Add CSRF token
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        console.log('Response status:', response.status); // DEBUG
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Response data:', data); // DEBUG
+        
+        // ✅ FIXED: Check for the correct response structure
+        if (data.forecasts && data.forecasts.length > 0) {
+            // Show results section
+            resultsSection.style.display = 'block';
+            
+            // ✅ FIXED: Transform data to match chart expectations
+            const transformedData = data.forecasts.map((item, index) => ({
+                week: index + 1, // Week number
+                forecasted_sales: item.predicted_quantity // Use correct field name
+            }));
+            
+            // Create forecast chart
+            createForecastChart(transformedData, productId);
+            
+            // Update results table
+            updateResultsTable(transformedData);
+            
+            // Show success message
+            showMessage('Forecast generated successfully!', 'success');
+            
+        } else if (data.error) {
+            // Handle Django error response
+            showMessage('Error: ' + data.error, 'error');
+        } else {
+            // Handle unexpected response format
+            showMessage('Error: Unexpected response format', 'error');
+            console.error('Unexpected response:', data);
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error: ' + error.message, 'error');
+    } finally {
+        // Re-enable button
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Forecast';
+    }
+}
+
+// ✅ ADD: Helper function to get CSRF token
+function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return '';
+}
+
+
+        function createForecastChart(forecastData, productId) {
+            const weeks = forecastData.map(item => `Week ${item.week}`);
+            const sales = forecastData.map(item => item.forecasted_sales);
+            
+            // Generate some historical data for context (replace with real data)
+            const historicalWeeks = Array.from({length: 8}, (_, i) => `Week ${i - 7}`);
+            const historicalSales = generateHistoricalData(sales[0], 8);
+            
+            const historicalTrace = {
+                x: historicalWeeks,
+                y: historicalSales,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Historical Sales',
+                line: {color: '#34495e', width: 3},
+                marker: {size: 8}
+            };
+            
+            const forecastTrace = {
+                x: weeks,
+                y: sales,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Forecasted Sales',
+                line: {color: '#e74c3c', width: 3, dash: 'dash'},
+                marker: {size: 8, symbol: 'diamond'}
+            };
+            
+            const layout = {
+                title: {
+                    text: `Sales Forecast for ${productId}`,
+                    font: {size: 24, color: '#2c3e50'}
+                },
+                xaxis: {
+                    title: 'Time Period',
+                    showgrid: true,
+                    gridcolor: '#ecf0f1'
+                },
+                yaxis: {
+                    title: 'Sales Units',
+                    showgrid: true,
+                    gridcolor: '#ecf0f1'
+                },
+                legend: {
+                    x: 0,
+                    y: 1,
+                    bgcolor: 'rgba(255,255,255,0.8)'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                shapes: [{
+                    type: 'line',
+                    x0: historicalWeeks.length - 0.5,
+                    x1: historicalWeeks.length - 0.5,
+                    y0: 0,
+                    y1: Math.max(...sales, ...historicalSales) * 1.1,
+                    line: {
+                        color: '#7f8c8d',
+                        width: 2,
+                        dash: 'dot'
+                    }
+                }],
+                annotations: [{
+                    x: historicalWeeks.length - 0.5,
+                    y: Math.max(...sales, ...historicalSales) * 1.05,
+                    text: 'Forecast Start',
+                    showarrow: false,
+                    font: {color: '#7f8c8d'}
+                }]
+            };
+            
+            Plotly.newPlot('forecast-chart', [historicalTrace, forecastTrace], layout, {responsive: true});
+        }
+
+        function generateHistoricalData(baseValue, weeks) {
+            const data = [];
+            let current = baseValue * 0.9;
+            
+            for (let i = 0; i < weeks; i++) {
+                current += (Math.random() - 0.5) * current * 0.1;
+                data.push(Math.round(current));
+            }
+            
+            return data;
+        }
+
+        function updateResultsTable(forecastData) {
+            const tbody = document.getElementById('results-tbody');
+            const table = document.getElementById('results-table');
+            
+            tbody.innerHTML = '';
+            
+            forecastData.forEach(item => {
+                const row = document.createElement('tr');
+                const confidence = Math.round(85 + Math.random() * 10); // Simulated confidence
+                
+                row.innerHTML = `
+                    <td>Week ${item.week}</td>
+                    <td>${Math.round(item.forecasted_sales)} units</td>
+                    <td>${confidence}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            table.style.display = 'table';
+        }
+
+        function showMessage(message, type) {
+            const existing = document.querySelector('.message');
+            if (existing) {
+                existing.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            
+            const resultsSection = document.getElementById('results-section');
+            resultsSection.parentNode.insertBefore(messageDiv, resultsSection);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            generateScenarioTable();
+        });
+    </script>
+</body>
+</html>

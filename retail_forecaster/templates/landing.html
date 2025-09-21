@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecaster AI - Retail Demand Prediction</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .performance-section {
+            background: white;
+            margin: 3rem 0;
+            padding: 3rem 0;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            height: 500px;
+            margin: 2rem 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            flex: 1;
+            margin: 0 1rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Forecaster AI</h1>
+            <p class="subtitle">Advanced Machine Learning for Retail Demand Prediction</p>
+            <a href="/dashboard/" class="cta-button">Try the Live Dashboard</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="performance-section">
+                <h2 class="section-title">Model Performance Showcase</h2>
+                
+                <div class="tabs">
+                    <button class="tab-button active" onclick="showTab('P001')">Product P001-Amul Milk 500ml</button>
+                    <button class="tab-button" onclick="showTab('P002')">Product P002-Britannia Bread</button>
+                    <button class="tab-button" onclick="showTab('P003')">Product P003-Imported Cheese</button>
+                    <button class="tab-button" onclick="showTab('P004')">Product P004-Organic Avocados</button>
+                    <button class="tab-button" onclick="showTab('P005')">Product P005-Specialty Cake Mix</button>
+                    <button class="tab-button" onclick="showTab('P010')">Product P006-Haldiram Sweets</button>
+                </div>
+
+                <div id="P001" class="tab-content active">
+                    <div id="chart-P001" class="chart-container"></div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">1.77</div>
+                            <div class="stat-label">MAE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">75.8%</div>
+                            <div class="stat-label">sMAPE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">38.1%</div>
+                            <div class="stat-label">MAPE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="P002" class="tab-content">
+                    <div id="chart-P002" class="chart-container"></div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">2.21</div>
+                            <div class="stat-label">MAE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">43.2%</div>
+                            <div class="stat-label">sMAPE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">43.6%</div>
+                            <div class="stat-label">MAPE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="P003" class="tab-content">
+                    <div id="chart-P003" class="chart-container"></div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">2.09</div>
+                            <div class="stat-label">MAE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">117.8%</div>
+                            <div class="stat-label">sMAPE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">50.1%</div>
+                            <div class="stat-label">MAPE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="P004" class="tab-content">
+                    <div id="chart-P004" class="chart-container"></div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">8.97</div>
+                            <div class="stat-label">MAE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">32.98%</div>
+                            <div class="stat-label">sMAPE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">43.12%</div>
+                            <div class="stat-label">MAPE</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% comment %} <div id="P005" class="tab-content">
+                    <div id="chart-P005" class="chart-container"></div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">2.09</div>
+                            <div class="stat-label">MAE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">117.8%</div>
+                            <div class="stat-label">sMAPE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">50.1%</div>
+                            <div class="stat-label">MAPE</div>
+                        </div>
+                    </div>
+                </div> {% endcomment %}
+
+                <div id="P010" class="tab-content">
+                    <div id="chart-P010" class="chart-container"></div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">3.96</div>
+                            <div class="stat-label">MAE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">92.3%</div>
+                            <div class="stat-label">sMAPE</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">90.9%</div>
+                            <div class="stat-label">MAPE</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Sample data for demonstration - replace with your actual data
+        const performanceData = {
+            P001: {
+                actual:  [
+            48,
+            46,
+            48,
+            49,
+            44,
+            46,
+            50,
+            52,
+            51,
+            46,
+            0,
+            52,
+            51,
+            42,
+            40,
+            46,
+            52,
+            49,
+            51,
+            51,
+            54,
+            48,
+            45,
+            44,
+            44,
+            44,
+            54,
+            55,
+            50,
+            54,
+            48,
+            49,
+            46,
+            48,
+            40,
+            37,
+            40,
+            41,
+            38,
+            52,
+            54,
+            52,
+            49,
+            48,
+            52,
+            43,
+            54,
+            45,
+            43,
+            44,
+            43,
+            41],
+                predicted: [
+            46,
+            46,
+            46,
+            47,
+            48,
+            49,
+            49,
+            48,
+            47,
+            47,
+            0,
+            49,
+            50,
+            41,
+            41,
+            49,
+            48,
+            48,
+            49,
+            50,
+            51,
+            50,
+            48,
+            46,
+            45,
+            44,
+            52,
+            52,
+            51,
+            50,
+            49,
+            49,
+            49,
+            48,
+            40,
+            40,
+            40,
+            40,
+            41,
+            53,
+            53,
+            52,
+            51,
+            51,
+            52,
+            42,
+            54,
+            43,
+            42,
+            42,
+            43,
+            44
+        ]
+            },
+            P002: {
+                actual:[
+            53,
+            55,
+            50,
+            56,
+            58,
+            51,
+            57,
+            56,
+            57,
+            58,
+            54,
+            53,
+            60,
+            46,
+            47,
+            59,
+            54,
+            53,
+            55,
+            56,
+            57,
+            54,
+            56,
+            52,
+            51,
+            47,
+            60,
+            55,
+            61,
+            50,
+            50,
+            51,
+            55,
+            46,
+            46,
+            40,
+            46,
+            38,
+            44,
+            55,
+            55,
+            54,
+            53,
+            58,
+            59,
+            46,
+            53,
+            44,
+            46,
+            44,
+            46,
+            46
+        ],
+                predicted:  [
+            52,
+            53,
+            54,
+            54,
+            54,
+            54,
+            56,
+            57,
+            58,
+            58,
+            57,
+            57,
+            58,
+            48,
+            47,
+            57,
+            55,
+            55,
+            56,
+            58,
+            58,
+            56,
+            54,
+            52,
+            51,
+            50,
+            58,
+            57,
+            55,
+            54,
+            52,
+            51,
+            51,
+            51,
+            42,
+            43,
+            43,
+            42,
+            41,
+            53,
+            53,
+            53,
+            55,
+            56,
+            58,
+            45,
+            58,
+            45,
+            45,
+            47,
+            48,
+            50
+        ]
+            },
+            P003: {
+                actual:[5, 3, 0, 0, 0, 0, 8, 0, 5, 0, 4, 4, 6, 8, 0, 0, 0, 8, 0, 4, 5, 5, 6, 7, 0, 0, 4, 0, 0, 0, 2, 2, 0, 3, 4, 2, 0, 0,1, 3, 0, 6, 1, 0, 3, 0, 2, 0, 0, 5, 3, 0],
+                predicted:[5.0, 6.0, 5.0, 3.0, 5.0, 3.0, 3.0, 0.0, 5.0 ,6.0, 5.0, 4.0, 5.0, 2.0, 2.0, 1.0, 3.0, 5.0, 1.0, 6.0, 5.0, 1.0, 1.0, 4.0, 4.0, 0.0 ,4.0 ,2.0 ,2.0 ,2.0 ,2.0 ,0.0 ,1.0 ,2.0 ,3.0 ,3.0 ,1.0 ,4.0 ,4.0, 0.0, 1.0 ,1.0 ,1.0 ,3.0 ,4.0 ,2.0 ,1.0 ,1.0 ,1.0 ,1.0 ,3.0 ,1.0]
+            },
+            P004 :{
+                actual:[44, 17, 34, 43, 22, 35, 43, 43, 24, 29, 44, 44, 32, 22, 45, 39, 45, 31, 37, 32, 46, 22, 46, 21, 31, 31, 27, 22, 49, 30, 24, 9, 19, 13, 7, 20, 8, 32, 17, 15, 27, 28, 28, 18, 19, 31, 15, 19, 40, 23, 33, 23],
+                predicted:[38.28234880112288, 40.93453752487514, 36.82777671750716, 39.1497581274883, 38.859691471632104, 30.47766650414931, 36.667794356847935, 32.73775852978626, 29.413985022532874, 32.07136407014491, 32.22099922464838, 32.58000429294857, 32.78796515816124, 28.488936050042238, 28.438729421667244, 32.4877246426835, 33.564140844352536, 29.413985022532874, 27.891294355980495, 29.93150619587485, 27.891294355980495, 34.07897066043792, 29.265111736233504, 39.05347496478235, 38.239954939384475, 31.165746640947145, 28.438729421667244, 29.37702650743665, 32.442035756601925, 41.827122049092395, 15.722765043317949, 19.6502163167753, 29.545738481388877, 25.747695541570337, 28.55394787548174, 28.32520431339072, 24.7164445435291, 25.51895197947932, 31.612796962736567, 21.21150114810012, 28.32520431339072, 29.330123561673005, 23.76771959490877, 23.859999245173825, 24.088742807264843, 25.747695541570337, 28.55394787548174, 21.21150114810012, 28.32520431339072, 29.88424373010676, 20.98406608241337, 33.65199897485857]
+            },
+            P010: {
+                actual: [
+            37,
+            45,
+            46,
+            42,
+            53,
+            44,
+            54,
+            55,
+            50,
+            57,
+            53,
+            49,
+            53,
+            41,
+            45,
+            51,
+            55,
+            54,
+            50,
+            46,
+            58,
+            46,
+            50,
+            44,
+            46,
+            43,
+            51,
+            38,
+            42,
+            33,
+            37,
+            39,
+            28,
+            30,
+            30,
+            21,
+            29,
+            30,
+            30,
+            57,
+            75,
+            57,
+            72,
+            70,
+            75,
+            25,
+            85,
+            29,
+            38,
+            36,
+            38,
+            37
+        ],
+                predicted:  [
+            41,
+            43,
+            44,
+            45,
+            48,
+            50,
+            51,
+            52,
+            52,
+            53,
+            53,
+            53,
+            52,
+            44,
+            45,
+            53,
+            53,
+            52,
+            51,
+            50,
+            50,
+            50,
+            47,
+            44,
+            41,
+            38,
+            46,
+            44,
+            42,
+            40,
+            38,
+            35,
+            32,
+            31,
+            22,
+            25,
+            26,
+            25,
+            22,
+            59,
+            61,
+            64,
+            66,
+            67,
+            67,
+            30,
+            73,
+            35,
+            36,
+            35,
+            35,
+            37
+        ]
+            }
+        };
+
+        function showTab(productId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(productId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Create chart for selected product
+            createChart(productId);
+        }
+
+        function createChart(productId) {
+            const data = performanceData[productId];
+            const weeks = Array.from({length: 52}, (_, i) => `Week ${i + 1}`);
+            
+            const trace1 = {
+                x: weeks,
+                y: data.actual,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Actual Sales',
+                line: {color: '#e74c3c', width: 3},
+                marker: {size: 6}
+            };
+            
+            const trace2 = {
+                x: weeks,
+                y: data.predicted,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Predicted Sales',
+                line: {color: '#3498db', width: 3, dash: 'dash'},
+                marker: {size: 6}
+            };
+            
+            const layout = {
+                title: {
+                    text: `${productId} - Model Performance (2025 Test Data)`,
+                    font: {size: 20, color: '#2c3e50'}
+                },
+                xaxis: {
+                    title: 'Week',
+                    showgrid: true,
+                    gridcolor: '#ecf0f1'
+                },
+                yaxis: {
+                    title: 'Sales Units',
+                    showgrid: true,
+                    gridcolor: '#ecf0f1'
+                },
+                legend: {
+                    x: 0,
+                    y: 1,
+                    bgcolor: 'rgba(255,255,255,0.8)'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot(`chart-${productId}`, [trace1, trace2], layout, {responsive: true});
+        }
+
+        // Initialize first chart
+        document.addEventListener('DOMContentLoaded', function() {
+            createChart('P001');
+        });
+    </script>
+</body>
+</html>
